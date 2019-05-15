@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="com.lluismnd.cordova.plugin.brotherPrinter"
+        version="0.0.1">
+
+    <name>BrotherPrinter</name>
+
+    <description>Cordova plugin for Brother Print SDK</description>
+    <repo>https://github.com/lluismnd/cordova-brother-printer.git</repo>
+    <keywords>brother, sdk, print, cordova</keywords>
+    <license></license>
+
+    <author>Lluis Menendez Fuentes</author>
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <!-- interface -->
+    <js-module src="www/printer.js" name="BrotherPrinter">
+        <clobbers target="plugin.brotherPrinter" />
+        <clobbers target="cordova.plugins.brotherPrinter" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="BrotherPrinter">
+                <param name="android-package" value="com.lluismnd.cordova.plugin.brotherPrinter.BrotherPrinter"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/BrotherPrinter.java" target-dir="src/com/lluismnd/cordova/plugin/brotherPrinter" />
+        <source-file src="src/android/libs/armeabi" target-dir="libs" />
+
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission android:name="android.permission.USB" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+            <uses-feature android:name="android.hardware.usb" android:required="true" />
+        </config-file>
+    </platform>
+</plugin>
