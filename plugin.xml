@@ -2,7 +2,7 @@
 
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="com.lluismnd.cordova.plugin.brotherPrinter"
+        id="com.lluismnd.cordova.plugin.brotherprinter"
         version="0.0.1">
 
     <name>BrotherPrinter</name>
@@ -20,19 +20,19 @@
 
     <!-- interface -->
     <js-module src="www/printer.js" name="BrotherPrinter">
-        <clobbers target="plugin.brotherPrinter" />
-        <clobbers target="cordova.plugins.brotherPrinter" />
+        <clobbers target="plugin.brotherprinter" />
+        <clobbers target="cordova.plugins.brotherprinter" />
     </js-module>
 
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="BrotherPrinter">
-                <param name="android-package" value="com.lluismnd.cordova.plugin.brotherPrinter.BrotherPrinter"/>
+                <param name="android-package" value="com.lluismnd.cordova.plugin.brotherprinter.BrotherPrinter"/>
             </feature>
         </config-file>
 
-        <source-file src="src/android/BrotherPrinter.java" target-dir="src/com/lluismnd/cordova/plugin/brotherPrinter" />
+        <source-file src="src/android/BrotherPrinter.java" target-dir="src/com/lluismnd/cordova/plugin/brotherprinter" />
         <source-file src="src/android/libs/armeabi" target-dir="libs" />
 
         <config-file target="AndroidManifest.xml" parent="/manifest">

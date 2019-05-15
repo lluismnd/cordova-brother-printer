@@ -1,0 +1,35 @@
+{
+  "name": "com.lluismnd.cordova.plugin.brotherprinter",
+  "version": "0.0.1",
+  "description": "Cordova plugin for Brother Print SDK",
+  "cordova": {
+    "id": "com.lluismnd.cordova.plugin.brotherPrinter",
+    "platforms": [
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lluismnd/cordova-brother-printer.git"
+  },
+  "keywords": [
+    "brother",
+    "sdk",
+    "print",
+    "cordova",
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.0.0"
+    }
+  ],
+  "author": "Lluis Menendez Fuentes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lluismnd/cordova-brother-printer/issues"
+  },
+  "homepage": "https://github.com/lluismnd/cordova-brother-printer#readme"
+}

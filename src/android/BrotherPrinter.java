@@ -1,4 +1,4 @@
-package com.lluismnd.cordova.plugin.brotherPrinter;
+package com.lluismnd.cordova.plugin.brotherprinter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class BrotherPrinter extends CordovaPlugin {
     public static final int READ_EXTERNAL_IMAGE = 2;
     public static final int READ_EXTERNAL_TEMPLATE = 3;
     public static final int PERMISSION_DENIED_ERROR = 20;
-    private static final String ACTION_USB_PERMISSION = "com.lluismnd.cordova.plugin.brotherPrinter.USB_PERMISSION";
+    private static final String ACTION_USB_PERMISSION = "com.lluismnd.cordova.plugin.brotherprinter.USB_PERMISSION";
 
     private JSONArray args = null;
     CallbackContext callbackContext = null;
