@@ -3,7 +3,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="com.lluismnd.cordova.plugin.brotherprinter"
-        version="0.0.2">
+        version="0.0.3">
 
     <name>BrotherPrinter</name>
 
@@ -45,6 +45,8 @@
             <uses-permission android:name="android.permission.USB" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.BLUETOOTH" />
+            <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
             <uses-feature android:name="android.hardware.usb" android:required="true" />
         </config-file>

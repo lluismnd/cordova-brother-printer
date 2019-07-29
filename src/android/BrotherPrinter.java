@@ -70,6 +70,8 @@ public class BrotherPrinter extends CordovaPlugin {
     private Boolean searched   = false;
     private Boolean found      = false;
 
+    public BluetoothAdapter bluetoothAdapter = null;
+
     public static final int READ_EXTERNAL_PDF = 1;
     public static final int READ_EXTERNAL_IMAGE = 2;
     public static final int READ_EXTERNAL_TEMPLATE = 3;
@@ -116,6 +118,7 @@ public class BrotherPrinter extends CordovaPlugin {
         }
 
         if ("printTemplate".equals(action)) {
+            Log.d(TAG, "---- printTemplate! ----");
             if(!PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 this.args = args;
                 this.callbackContext = callbackContext;
@@ -138,6 +141,7 @@ public class BrotherPrinter extends CordovaPlugin {
         }
 
         if ("getPrinters".equals(action)) {
+            Log.d(TAG, "---- getPrinters! ----");
             getPrinters(callbackContext);
             return true;
         }
@@ -250,8 +254,8 @@ public class BrotherPrinter extends CordovaPlugin {
 
 
             if( printerInfo.getString("port").equals( "BLUETOOTH" ) ){
-                BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                BluetoothConnectionSetting.setBluetoothAdapter(bluetoothAdapter);
+                this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                BluetoothConnectionSetting.setBluetoothAdapter( this.bluetoothAdapter );
             }
             else{
                 UsbManager usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
