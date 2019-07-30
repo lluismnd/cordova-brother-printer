@@ -38,6 +38,13 @@ BrotherPrinter.prototype = {
         }
         cordova.exec(callback, callbackError, 'BrotherPrinter', 'addTemplate', [data, printInfo])
     },
+    removeTemplates: function ( data, printInfo, callback, callbackError ) {
+        if (!data) {
+            console.log('No data passed in. Expects a object template.')
+            return
+        }
+        cordova.exec(callback, callbackError, 'BrotherPrinter', 'removeTemplates', [data, printInfo])
+    },
     getPrinters: function ( callback, callbackError) {
         cordova.exec(callback, callbackError, 'BrotherPrinter', 'getPrinters', [])
     },

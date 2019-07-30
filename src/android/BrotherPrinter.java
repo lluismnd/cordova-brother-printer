@@ -140,6 +140,11 @@ public class BrotherPrinter extends CordovaPlugin {
             return true;
         }
 
+        if ("removeTemplates".equals(action)) {
+            removeTemplates(args, callbackContext);
+            return true;
+        }
+
         if ("getPrinters".equals(action)) {
             Log.d(TAG, "---- getPrinters! ----");
             getPrinters(callbackContext);
@@ -194,19 +199,19 @@ public class BrotherPrinter extends CordovaPlugin {
 
                             netPrintersList.add(netPrinter);
 
-                            Log.d(TAG, 
-                                        " idx:    " + Integer.toString(i)
-                                    + "\n model:  " + netPrinters[i].modelName
-                                    + "\n ip:     " + netPrinters[i].ipAddress
-                                    + "\n mac:    " + netPrinters[i].macAddress
-                                    + "\n serial: " + netPrinters[i].serNo
-                                    + "\n name:   " + netPrinters[i].nodeName
-                                 );
+                            Log.d(TAG,
+                                    " idx:    " + Integer.toString(i)
+                                            + "\n model:  " + netPrinters[i].modelName
+                                            + "\n ip:     " + netPrinters[i].ipAddress
+                                            + "\n mac:    " + netPrinters[i].macAddress
+                                            + "\n serial: " + netPrinters[i].serNo
+                                            + "\n name:   " + netPrinters[i].nodeName
+                            );
                         }
 
                         Log.d(TAG, "---- /network printers found! ----");
 
-                    }else if (netPrinterCount == 0 ) { 
+                    }else if (netPrinterCount == 0 ) {
                         found = false;
                         Log.d(TAG, "!!!! No network printers found !!!!");
                     }
@@ -223,7 +228,7 @@ public class BrotherPrinter extends CordovaPlugin {
 
                     callbackctx.sendPluginResult(result);
 
-                }catch(Exception e){    
+                }catch(Exception e){
                     e.printStackTrace();
                 }
 
@@ -247,8 +252,8 @@ public class BrotherPrinter extends CordovaPlugin {
             myPrinterInfo.paperSize = PrinterInfo.PaperSize.CUSTOM;
             myPrinterInfo.ipAddress = ipAddress;
             myPrinterInfo.macAddress = printerInfo.getString("macAddress");
-            myPrinterInfo.numberOfCopies = 1;
-            myPrinterInfo.customPaper = Environment.getExternalStorageDirectory().toString() + "/ALEX/TD2120_57mm.bin";
+            myPrinterInfo.numberOfCopies = ( printerInfo.has( "numberOfCopies" ) )? printerInfo.getInt("numberOfCopies") : 1;
+            myPrinterInfo.customPaper = printerInfo.getString( "customPaper" ); //Environment.getExternalStorageDirectory().toString() + "/ALEX/TD2120_57mm.bin" = /storage/emulated/0/ALEX/...
 
             myPrinter.setPrinterInfo(myPrinterInfo);
 
@@ -418,6 +423,40 @@ public class BrotherPrinter extends CordovaPlugin {
         }
     }
 
+    private void removeTemplates( JSONArray args, final CallbackContext callbackctx) {
+        try{
+            JSONArray templates = args.getJSONArray(0);
+            JSONObject printerInfo = args.getJSONObject(1);
+
+            ArrayList<Integer> list_templates = new ArrayList<Integer>();
+            if (templates != null) {
+                int len = templates.length();
+                for (int i=0;i<len;i++){
+                    list_templates.add(templates.getInt(i));
+                }
+            }
+
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    try{
+                        Printer myPrinter = initPrinter( printerInfo, callbackctx );
+
+                        myPrinter.startCommunication();
+                        PrinterStatus status = myPrinter.removeTemplate( list_templates );
+                        myPrinter.endCommunication();
+                        callbackctx.success( String.valueOf(status.errorCode) );
+
+                    }catch(Exception e){
+                        callbackctx.error("FAILED to add template: " + e.toString() );
+                    }
+                }
+            });
+        }
+        catch( Exception e ){
+            callbackctx.error("FAILED to print: " + e.toString() );
+        }
+    }
+
     private void printTemplate( JSONArray args, final CallbackContext callbackctx) {
         try{
             JSONObject template = args.getJSONObject(0);
@@ -447,11 +486,10 @@ public class BrotherPrinter extends CordovaPlugin {
                             if( iTemplate < 100 ) sTemplate+= "0";
                             sTemplate = sTemplate + iTemplate.toString();
 
-                            Integer iNumCopies = printerInfo.getInt("numberOfCopies");
                             String sNumCopies = "";
-                            if( iNumCopies < 10 ) sNumCopies+= "0";
-                            if( iNumCopies < 100 ) sNumCopies+= "0";
-                            sNumCopies = sNumCopies + iNumCopies.toString();
+                            if( myPrinter.getUserPrinterInfo().numberOfCopies < 10 ) sNumCopies+= "0";
+                            if( myPrinter.getUserPrinterInfo().numberOfCopies < 100 ) sNumCopies+= "0";
+                            sNumCopies = sNumCopies + myPrinter.getUserPrinterInfo().numberOfCopies;
                             String s = "^TS" + sTemplate + sVariables + "^CN" + sNumCopies + "^FF";
                             Log.d( "BrotherPrinter", "FICHERO: " + s);
                             byte[] bytes = s.getBytes();
@@ -585,12 +623,12 @@ public class BrotherPrinter extends CordovaPlugin {
                     if (!usbManager.hasPermission(usbDevice)) {
                         usbManager.requestPermission(usbDevice, permissionIntent);
                     } else {
-                        break; 
+                        break;
                     }
 
-                    try { 
+                    try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException e) { 
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
@@ -638,7 +676,7 @@ public class BrotherPrinter extends CordovaPlugin {
 
                 } catch (IOException e) {
                     Log.d(TAG, "Temp file action failed: " + e.toString());
-                } 
+                }
 
             }
         });
