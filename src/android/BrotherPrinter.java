@@ -1,6 +1,7 @@
 package com.lluismnd.cordova.plugin.brotherprinter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -410,7 +411,32 @@ public class BrotherPrinter extends CordovaPlugin {
                         myPrinter.startCommunication();
                         PrinterStatus status = myPrinter.transfer( template.getString( "path" ) );
                         myPrinter.endCommunication();
-                        callbackctx.success( String.valueOf(status.errorCode) );
+
+                        String tmplName = template.getString( "path" );
+                        String[] aTmplName = tmplName.split("/" );
+                        tmplName = aTmplName[ aTmplName.length - 1 ];
+                        //Log.d( "BrotherSDKPlugin", tmplName );
+                        aTmplName = tmplName.split( "\\." );
+                        //Log.d( "BrotherSDKPlugin", Arrays.toString( aTmplName ) );
+                        tmplName = aTmplName[ 0 ];
+
+                        myPrinter.startCommunication();
+                        List<TemplateInfo> templates = new ArrayList();
+                        status = myPrinter.getTemplateList( templates );
+
+                        JSONObject template = new JSONObject();
+                        for( TemplateInfo t : templates ){
+                            if( t.fileName == tmplName ) {
+                                JSONObject templInfo = new JSONObject();
+                                templInfo.put("key", t.key);
+                                templInfo.put("fileName", t.fileName);
+
+                                template = templInfo;
+                            }
+                            //Log.d( "BrotherSDKPlugin", t.key + " " + t.fileName + " " + tmplName );
+                        }
+                        myPrinter.endCommunication();
+                        callbackctx.success( template );
 
                     }catch(Exception e){
                         callbackctx.error("FAILED to add template: " + e.toString() );
@@ -435,6 +461,8 @@ public class BrotherPrinter extends CordovaPlugin {
                     list_templates.add(templates.getInt(i));
                 }
             }
+
+            Log.d( "BrotherSDK", list_templates.toString() );
 
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
