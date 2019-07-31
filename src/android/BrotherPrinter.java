@@ -254,7 +254,7 @@ public class BrotherPrinter extends CordovaPlugin {
             myPrinterInfo.ipAddress = ipAddress;
             myPrinterInfo.macAddress = printerInfo.getString("macAddress");
             myPrinterInfo.numberOfCopies = ( printerInfo.has( "numberOfCopies" ) )? printerInfo.getInt("numberOfCopies") : 1;
-            myPrinterInfo.customPaper = printerInfo.getString( "customPaper" ); //Environment.getExternalStorageDirectory().toString() + "/ALEX/TD2120_57mm.bin" = /storage/emulated/0/ALEX/...
+            myPrinterInfo.customPaper = ( printerInfo.has( "customPaper" ) )? printerInfo.getString( "customPaper" ) : ""; //Environment.getExternalStorageDirectory().toString() + "/ALEX/TD2120_57mm.bin" = /storage/emulated/0/ALEX/...
 
             myPrinter.setPrinterInfo(myPrinterInfo);
 
@@ -426,12 +426,10 @@ public class BrotherPrinter extends CordovaPlugin {
 
                         JSONObject template = new JSONObject();
                         for( TemplateInfo t : templates ){
-                            if( t.fileName == tmplName ) {
-                                JSONObject templInfo = new JSONObject();
-                                templInfo.put("key", t.key);
-                                templInfo.put("fileName", t.fileName);
-
-                                template = templInfo;
+                            if( t.fileName.equals( tmplName ) ) {
+                                template.put("key", t.key);
+                                template.put("fileName", t.fileName);
+                                //Log.d( "BrotherSDKPlugin", "FOUND!" );
                             }
                             //Log.d( "BrotherSDKPlugin", t.key + " " + t.fileName + " " + tmplName );
                         }
