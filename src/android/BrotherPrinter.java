@@ -523,7 +523,7 @@ public class BrotherPrinter extends CordovaPlugin {
                                     JSONObject key = template.getJSONArray("data").getJSONObject(i);
                                     Boolean b = myPrinter.replaceTextName( key.getString( "v" ), key.getString( "k" ) );
                                     Log.d( "BrotherPrinter", "CAMBIAMOS EL TEMPLATE: " + key.getString( "v" ) + " - " + key.getString( "k" ) + " - " + b );
-                                    String s = "\\";
+                                    String s = ",;";
                                     if( !sVariables.equals( "" ) ) sVariables += s;
                                     sVariables += key.getString( "v" );
                                 }
@@ -539,7 +539,7 @@ public class BrotherPrinter extends CordovaPlugin {
                             if( myPrinter.getUserPrinterInfo().numberOfCopies < 10 ) sNumCopies+= "0";
                             if( myPrinter.getUserPrinterInfo().numberOfCopies < 100 ) sNumCopies+= "0";
                             sNumCopies = sNumCopies + myPrinter.getUserPrinterInfo().numberOfCopies;
-                            String s = "^TS" + sTemplate + sVariables + "^CN" + sNumCopies + "^FF";
+                            String s = (char)27 + "iXD2" + (char)2 + (char)0 + ",;" + "^TS" + sTemplate + sVariables + "^CN" + sNumCopies + "^FF";
                             Log.d( "BrotherPrinter", "FICHERO: " + s);
                             byte[] bytes = s.getBytes();
                             FileOutputStream fout=new FileOutputStream(Environment.getExternalStorageDirectory().toString() + "/ALEX/template.txt");
