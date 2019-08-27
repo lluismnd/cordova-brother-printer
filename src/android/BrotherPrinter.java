@@ -1,5 +1,6 @@
 package com.lluismnd.cordova.plugin.brotherprinter;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -76,6 +77,7 @@ public class BrotherPrinter extends CordovaPlugin {
     public static final int READ_EXTERNAL_PDF = 1;
     public static final int READ_EXTERNAL_IMAGE = 2;
     public static final int READ_EXTERNAL_TEMPLATE = 3;
+    public static final int READ_EXTERNAL_ADD_TEMPLATE = 4;
     public static final int PERMISSION_DENIED_ERROR = 20;
     private static final String ACTION_USB_PERMISSION = "com.lluismnd.cordova.plugin.brotherprinter.USB_PERMISSION";
 
@@ -137,7 +139,14 @@ public class BrotherPrinter extends CordovaPlugin {
         }
 
         if ("addTemplate".equals(action)) {
-            addTemplate(args, callbackContext);
+            if(!PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                this.args = args;
+                this.callbackContext = callbackContext;
+                PermissionHelper.requestPermissions( this, READ_EXTERNAL_ADD_TEMPLATE, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE});
+            } else {
+                addTemplate(args, callbackContext);
+            }
+
             return true;
         }
 
@@ -251,8 +260,8 @@ public class BrotherPrinter extends CordovaPlugin {
             myPrinterInfo.printMode = PrinterInfo.PrintMode.ORIGINAL;
             myPrinterInfo.orientation = PrinterInfo.Orientation.valueOf(printerInfo.getString("orientation"));
             myPrinterInfo.paperSize = PrinterInfo.PaperSize.CUSTOM;
-            myPrinterInfo.ipAddress = ipAddress;
             myPrinterInfo.macAddress = printerInfo.getString("macAddress");
+            myPrinterInfo.ipAddress = printerInfo.getString( "ipAddress" );
             myPrinterInfo.numberOfCopies = ( printerInfo.has( "numberOfCopies" ) )? printerInfo.getInt("numberOfCopies") : 1;
             myPrinterInfo.customPaper = ( printerInfo.has( "customPaper" ) )? printerInfo.getString( "customPaper" ) : ""; //Environment.getExternalStorageDirectory().toString() + "/ALEX/TD2120_57mm.bin" = /storage/emulated/0/ALEX/...
 
@@ -263,7 +272,7 @@ public class BrotherPrinter extends CordovaPlugin {
                 this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                 BluetoothConnectionSetting.setBluetoothAdapter( this.bluetoothAdapter );
             }
-            else{
+            else if( printerInfo.getString("port").equals( "USB" ) ){
                 UsbManager usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
                 UsbDevice usbDevice = myPrinter.getUsbDevice(usbManager);
 
@@ -408,33 +417,39 @@ public class BrotherPrinter extends CordovaPlugin {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
-                        myPrinter.startCommunication();
-                        PrinterStatus status = myPrinter.transfer( template.getString( "path" ) );
-                        myPrinter.endCommunication();
+                        if( myPrinter.startCommunication() ) {
+                            PrinterStatus status = myPrinter.transfer(template.getString("path"));
+                            Log.d("TAG", "ERROR - " + status.errorCode);
+                            myPrinter.endCommunication();
 
-                        String tmplName = template.getString( "path" );
-                        String[] aTmplName = tmplName.split("/" );
-                        tmplName = aTmplName[ aTmplName.length - 1 ];
-                        //Log.d( "BrotherSDKPlugin", tmplName );
-                        aTmplName = tmplName.split( "\\." );
-                        //Log.d( "BrotherSDKPlugin", Arrays.toString( aTmplName ) );
-                        tmplName = aTmplName[ 0 ];
+                            String tmplName = template.getString("path");
+                            String[] aTmplName = tmplName.split("/");
+                            tmplName = aTmplName[aTmplName.length - 1];
+                            //Log.d( "BrotherSDKPlugin", tmplName );
+                            aTmplName = tmplName.split("\\.");
+                            //Log.d( "BrotherSDKPlugin", Arrays.toString( aTmplName ) );
+                            tmplName = aTmplName[0];
 
-                        myPrinter.startCommunication();
-                        List<TemplateInfo> templates = new ArrayList();
-                        status = myPrinter.getTemplateList( templates );
+                            myPrinter.startCommunication();
+                            List<TemplateInfo> templates = new ArrayList();
+                            status = myPrinter.getTemplateList(templates);
 
-                        JSONObject template = new JSONObject();
-                        for( TemplateInfo t : templates ){
-                            if( t.fileName.equals( tmplName ) ) {
-                                template.put("key", t.key);
-                                template.put("fileName", t.fileName);
-                                //Log.d( "BrotherSDKPlugin", "FOUND!" );
+                            JSONObject template = new JSONObject();
+                            for (TemplateInfo t : templates) {
+                                if (t.fileName.equals(tmplName)) {
+                                    template.put("key", t.key);
+                                    template.put("fileName", t.fileName);
+                                    //Log.d( "BrotherSDKPlugin", "FOUND!" );
+                                }
+                                Log.d( "BrotherSDKPlugin", t.key + " " + t.fileName + " " + tmplName );
                             }
-                            //Log.d( "BrotherSDKPlugin", t.key + " " + t.fileName + " " + tmplName );
+                            myPrinter.endCommunication();
+                            callbackctx.success(template);
                         }
-                        myPrinter.endCommunication();
-                        callbackctx.success( template );
+                        else{
+                            Log.d("TAG", "ERROR -  CAN NOT START COMMUNICATION" );
+                            callbackctx.success();
+                        }
 
                     }catch(Exception e){
                         callbackctx.error("FAILED to add template: " + e.toString() );
@@ -501,7 +516,8 @@ public class BrotherPrinter extends CordovaPlugin {
                                     JSONObject key = template.getJSONArray("data").getJSONObject(i);
                                     Boolean b = myPrinter.replaceTextName( key.getString( "v" ), key.getString( "k" ) );
                                     Log.d( "BrotherPrinter", "CAMBIAMOS EL TEMPLATE: " + key.getString( "v" ) + " - " + key.getString( "k" ) + " - " + b );
-                                    if( !sVariables.equals( "" ) ) sVariables += ",";
+                                    String s = "\\\\09";
+                                    if( !sVariables.equals( "" ) ) sVariables += s;
                                     sVariables += key.getString( "v" );
                                 }
                             }
@@ -725,6 +741,9 @@ public class BrotherPrinter extends CordovaPlugin {
                 break;
             case READ_EXTERNAL_TEMPLATE:
                 printTemplate( this.args, this.callbackContext);
+                break;
+            case READ_EXTERNAL_ADD_TEMPLATE:
+                addTemplate( this.args, this.callbackContext);
                 break;
         }
     }
