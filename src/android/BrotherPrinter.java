@@ -254,23 +254,23 @@ public class BrotherPrinter extends CordovaPlugin {
 
         try {
             myPrinterInfo = myPrinter.getPrinterInfo();
-
             myPrinterInfo.printerModel = PrinterInfo.Model.valueOf(printerInfo.getString("model"));
             myPrinterInfo.port = PrinterInfo.Port.valueOf(printerInfo.getString("port"));
             myPrinterInfo.printMode = PrinterInfo.PrintMode.ORIGINAL;
             myPrinterInfo.orientation = PrinterInfo.Orientation.valueOf(printerInfo.getString("orientation"));
             myPrinterInfo.paperSize = PrinterInfo.PaperSize.CUSTOM;
-            myPrinterInfo.macAddress = printerInfo.getString("macAddress");
-            myPrinterInfo.ipAddress = printerInfo.getString( "ipAddress" );
+            myPrinterInfo.macAddress = ( printerInfo.has( "macAddress" ) )? printerInfo.getString("macAddress") : "";
+            myPrinterInfo.ipAddress = ( printerInfo.has( "ipAddress" ) )? printerInfo.getString( "ipAddress" ) : "";
             myPrinterInfo.numberOfCopies = ( printerInfo.has( "numberOfCopies" ) )? printerInfo.getInt("numberOfCopies") : 1;
             myPrinterInfo.customPaper = ( printerInfo.has( "customPaper" ) )? printerInfo.getString( "customPaper" ) : ""; //Environment.getExternalStorageDirectory().toString() + "/ALEX/TD2120_57mm.bin" = /storage/emulated/0/ALEX/...
 
             myPrinter.setPrinterInfo(myPrinterInfo);
 
 
+
             if( printerInfo.getString("port").equals( "BLUETOOTH" ) ){
-                this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                BluetoothConnectionSetting.setBluetoothAdapter( this.bluetoothAdapter );
+                bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                BluetoothConnectionSetting.setBluetoothAdapter( bluetoothAdapter );
             }
             else if( printerInfo.getString("port").equals( "USB" ) ){
                 UsbManager usbManager = (UsbManager) cordova.getActivity().getSystemService(Context.USB_SERVICE);
@@ -417,6 +417,10 @@ public class BrotherPrinter extends CordovaPlugin {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
+                        if( !bluetoothAdapter.isEnabled() ){
+                            Log.d("TAG", "ERROR - BLUETOOTH NO ACTIVE" );
+                        }
+
                         if( myPrinter.startCommunication() ) {
                             PrinterStatus status = myPrinter.transfer(template.getString("path"));
                             Log.d("TAG", "ERROR - " + status.errorCode);
@@ -508,6 +512,9 @@ public class BrotherPrinter extends CordovaPlugin {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
+                        /*if( !bluetoothAdapter.isEnabled() ){
+                            Log.d("TAG", "ERROR - BLUETOOTH NO ACTIVE" );
+                        }*/
                         myPrinter.startCommunication();
                         if( myPrinter.startPTTPrint( template.getInt("id"), null ) ){
                             String sVariables = "";
@@ -516,7 +523,7 @@ public class BrotherPrinter extends CordovaPlugin {
                                     JSONObject key = template.getJSONArray("data").getJSONObject(i);
                                     Boolean b = myPrinter.replaceTextName( key.getString( "v" ), key.getString( "k" ) );
                                     Log.d( "BrotherPrinter", "CAMBIAMOS EL TEMPLATE: " + key.getString( "v" ) + " - " + key.getString( "k" ) + " - " + b );
-                                    String s = "\\\\09";
+                                    String s = "\\";
                                     if( !sVariables.equals( "" ) ) sVariables += s;
                                     sVariables += key.getString( "v" );
                                 }
