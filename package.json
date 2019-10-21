@@ -1,6 +1,6 @@
 {
   "name": "com.lluismnd.cordova.plugin.brotherprinter",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Cordova plugin for Brother Print SDK",
   "cordova": {
     "id": "com.lluismnd.cordova.plugin.brotherPrinter",
