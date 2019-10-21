@@ -740,15 +740,16 @@ public class BrotherPrinter extends CordovaPlugin {
     private void getRTCInfo( JSONArray args, final CallbackContext callbackctx) {
         try{
 
-            JSONObject template = args.getJSONObject(0);
-            JSONObject printerInfo = args.getJSONObject(1);
+            JSONObject printerInfo = args.getJSONObject(0);
 
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
-
-                        callbackctx.success( myPrinter.getRTCInfo() );
+                        myPrinter.startCommunication();
+                        RTCInfo result = myPrinter.getRTCInfo();
+                        myPrinter.endCommunication();
+                        callbackctx.success( result.year + "-" + result.month + "-" + result.day + " " + result.hour + ":" + result.minute + ":" + result.second );
 
                     }catch(Exception e){
                         callbackctx.error("FAILED to add template: " + e.toString() );
