@@ -58,6 +58,7 @@ import com.brother.ptouch.sdk.PrinterInfo;
 import com.brother.ptouch.sdk.PrinterStatus;
 import com.brother.ptouch.sdk.connection.BluetoothConnectionSetting;
 import com.brother.ptouch.sdk.TemplateInfo;
+import com.brother.ptouch.sdk.RTCInfo;
 
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -161,9 +162,14 @@ public class BrotherPrinter extends CordovaPlugin {
             return true;
         }
 
-
         if ("sendUSBConfig".equals(action)) {
             sendUSBConfig(args, callbackContext);
+            return true;
+        }
+
+        if ("getRTCInfo".equals(action)) {
+            Log.d(TAG, "---- getRTCInfo! ----");
+            getRTCInfo(args,callbackContext);
             return true;
         }
 
@@ -729,6 +735,30 @@ public class BrotherPrinter extends CordovaPlugin {
 
             }
         });
+    }
+
+    private void getRTCInfo( JSONArray args, final CallbackContext callbackctx) {
+        try{
+
+            JSONObject template = args.getJSONObject(0);
+            JSONObject printerInfo = args.getJSONObject(1);
+
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    try{
+                        Printer myPrinter = initPrinter( printerInfo, callbackctx );
+
+                        callbackctx.success( myPrinter.getRTCInfo() );
+
+                    }catch(Exception e){
+                        callbackctx.error("FAILED to add template: " + e.toString() );
+                    }
+                }
+            });
+        }
+        catch( Exception e ){
+            callbackctx.error("FAILED to print: " + e.toString() );
+        }
     }
 
     public void onRequestPermissionResult(int requestCode, String[] permissions,

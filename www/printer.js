@@ -54,7 +54,10 @@ BrotherPrinter.prototype = {
             return
         }
         cordova.exec(callback, callbackError, 'BrotherPrinter', 'sendUSBConfig', [data])
-    }
+    },
+    getRTCInfo: function ( printInfo, callback, callbackError) {
+        cordova.exec(callback, callbackError, 'BrotherPrinter', 'getRTCInfo', [printInfo])
+    },
 }
 var plugin = new BrotherPrinter()
 module.exports = plugin
