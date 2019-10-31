@@ -80,6 +80,8 @@ public class BrotherPrinter extends CordovaPlugin {
     public static final int READ_EXTERNAL_TEMPLATE = 3;
     public static final int READ_EXTERNAL_ADD_TEMPLATE = 4;
     public static final int PERMISSION_DENIED_ERROR = 20;
+    public static final String NO_ERROR = "ERROR_NONE";
+    public static final String PRINTER_BUSY = "ERROR_PRINTER_BUSY";
     private static final String ACTION_USB_PERMISSION = "com.lluismnd.cordova.plugin.brotherprinter.USB_PERMISSION";
 
     private JSONArray args = null;
@@ -366,13 +368,13 @@ public class BrotherPrinter extends CordovaPlugin {
                         callbackctx.success(String.valueOf(status.errorCode));
 
                     }catch(Exception e){
-                        callbackctx.error("FAILED to print: " + e.toString() );
+                        callbackctx.error( e.toString() );
                     }
                 }
             });
         }
         catch( Exception e ){
-            callbackctx.error("FAILED to print: " + e.toString() );
+            callbackctx.error( e.toString() );
         }
     }
 
@@ -386,30 +388,36 @@ public class BrotherPrinter extends CordovaPlugin {
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
                         myPrinter.startCommunication();
-                        List<TemplateInfo> templates = new ArrayList();
-                        PrinterStatus status = myPrinter.getTemplateList( templates );
+                        PrinterStatus ps = myPrinter.getPrinterStatus();
+                        if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            List<TemplateInfo> templates = new ArrayList();
+                            PrinterStatus status = myPrinter.getTemplateList(templates);
 
-                        JSONArray result = new JSONArray();
-                        for( TemplateInfo t : templates ){
-                            JSONObject templInfo = new JSONObject();
-                            templInfo.put( "key", t.key );
-                            templInfo.put( "fileName", t.fileName );
-                            result.put( templInfo );
-                            Log.d( "BrotherSDKPlugin", t.key + " " + t.fileName );
+                            JSONArray result = new JSONArray();
+                            for (TemplateInfo t : templates) {
+                                JSONObject templInfo = new JSONObject();
+                                templInfo.put("key", t.key);
+                                templInfo.put("fileName", t.fileName);
+                                result.put(templInfo);
+                                Log.d("BrotherSDKPlugin", t.key + " " + t.fileName);
+                            }
+                            myPrinter.endCommunication();
+                            JSONObject oResult = new JSONObject();
+                            oResult.put("data", result);
+                            callbackctx.success(oResult);
                         }
-                        myPrinter.endCommunication();
-                        JSONObject oResult = new JSONObject();
-                        oResult.put( "data", result );
-                        callbackctx.success( oResult );
+                        else{
+                            callbackctx.error( PRINTER_BUSY );
+                        }
 
                     }catch(Exception e){
-                        callbackctx.error("FAILED to get templates: " + e.toString() );
+                        callbackctx.error( e.toString() );
                     }
                 }
             });
         }
         catch( Exception e ){
-            callbackctx.error("FAILED to get templates: " + e.toString() );
+            callbackctx.error( e.toString() );
         }
     }
 
@@ -428,41 +436,47 @@ public class BrotherPrinter extends CordovaPlugin {
                         }
 
                         if( myPrinter.startCommunication() ) {
-                            PrinterStatus status = myPrinter.transfer(template.getString("path"));
-                            Log.d("TAG", "ERROR - " + status.errorCode);
-                            myPrinter.endCommunication();
+                            PrinterStatus ps = myPrinter.getPrinterStatus();
+                            if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                                PrinterStatus status = myPrinter.transfer(template.getString("path"));
+                                Log.d("TAG", "ERROR - " + status.errorCode);
+                                myPrinter.endCommunication();
 
-                            String tmplName = template.getString("path");
-                            String[] aTmplName = tmplName.split("/");
-                            tmplName = aTmplName[aTmplName.length - 1];
-                            //Log.d( "BrotherSDKPlugin", tmplName );
-                            aTmplName = tmplName.split("\\.");
-                            //Log.d( "BrotherSDKPlugin", Arrays.toString( aTmplName ) );
-                            tmplName = aTmplName[0];
+                                String tmplName = template.getString("path");
+                                String[] aTmplName = tmplName.split("/");
+                                tmplName = aTmplName[aTmplName.length - 1];
+                                //Log.d( "BrotherSDKPlugin", tmplName );
+                                aTmplName = tmplName.split("\\.");
+                                //Log.d( "BrotherSDKPlugin", Arrays.toString( aTmplName ) );
+                                tmplName = aTmplName[0];
 
-                            myPrinter.startCommunication();
-                            List<TemplateInfo> templates = new ArrayList();
-                            status = myPrinter.getTemplateList(templates);
+                                myPrinter.startCommunication();
+                                List<TemplateInfo> templates = new ArrayList();
+                                status = myPrinter.getTemplateList(templates);
 
-                            JSONObject template = new JSONObject();
-                            for (TemplateInfo t : templates) {
-                                if (t.fileName.equals(tmplName)) {
-                                    template.put("key", t.key);
-                                    template.put("fileName", t.fileName);
-                                    //Log.d( "BrotherSDKPlugin", "FOUND!" );
+                                JSONObject template = new JSONObject();
+                                for (TemplateInfo t : templates) {
+                                    if (t.fileName.equals(tmplName)) {
+                                        template.put("key", t.key);
+                                        template.put("fileName", t.fileName);
+                                        //Log.d( "BrotherSDKPlugin", "FOUND!" );
+                                    }
+                                    Log.d("BrotherSDKPlugin", t.key + " " + t.fileName + " " + tmplName);
                                 }
-                                Log.d( "BrotherSDKPlugin", t.key + " " + t.fileName + " " + tmplName );
+                                myPrinter.endCommunication();
+                                callbackctx.success(template);
                             }
-                            myPrinter.endCommunication();
-                            callbackctx.success(template);
+                            else{
+                                callbackctx.error( PRINTER_BUSY );
+                            }
                         }
                         else{
                             Log.d("TAG", "ERROR -  CAN NOT START COMMUNICATION" );
-                            callbackctx.success();
+                            callbackctx.error( PRINTER_BUSY );
                         }
 
                     }catch(Exception e){
-                        callbackctx.error("FAILED to add template: " + e.toString() );
+                        callbackctx.error( e.toString() );
                     }
                 }
             });
@@ -493,18 +507,24 @@ public class BrotherPrinter extends CordovaPlugin {
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
                         myPrinter.startCommunication();
-                        PrinterStatus status = myPrinter.removeTemplate( list_templates );
-                        myPrinter.endCommunication();
-                        callbackctx.success( String.valueOf(status.errorCode) );
+                        PrinterStatus ps = myPrinter.getPrinterStatus();
+                        if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            PrinterStatus status = myPrinter.removeTemplate(list_templates);
+                            myPrinter.endCommunication();
+                            callbackctx.success(String.valueOf(status.errorCode));
+                        }
+                        else{
+                            callbackctx.error( PRINTER_BUSY );
+                        }
 
                     }catch(Exception e){
-                        callbackctx.error("FAILED to add template: " + e.toString() );
+                        callbackctx.error( e.toString() );
                     }
                 }
             });
         }
         catch( Exception e ){
-            callbackctx.error("FAILED to print: " + e.toString() );
+            callbackctx.error( e.toString() );
         }
     }
 
@@ -522,53 +542,60 @@ public class BrotherPrinter extends CordovaPlugin {
                             Log.d("TAG", "ERROR - BLUETOOTH NO ACTIVE" );
                         }*/
                         myPrinter.startCommunication();
-                        if( myPrinter.startPTTPrint( template.getInt("id"), null ) ){
-                            String sVariables = "";
-                            if( template.has( "data" ) ){
-                                for (int i=0; i < template.getJSONArray("data").length(); i++) {
-                                    JSONObject key = template.getJSONArray("data").getJSONObject(i);
-                                    Boolean b = myPrinter.replaceTextName( key.getString( "v" ), key.getString( "k" ) );
-                                    Log.d( "BrotherPrinter", "CAMBIAMOS EL TEMPLATE: " + key.getString( "v" ) + " - " + key.getString( "k" ) + " - " + b );
-                                    String s = ",;";
-                                    if( !sVariables.equals( "" ) ) sVariables += s;
-                                    sVariables += key.getString( "v" );
+                        PrinterStatus ps = myPrinter.getPrinterStatus();
+                        if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            if (myPrinter.startPTTPrint(template.getInt("id"), null)) {
+                                String sVariables = "";
+                                if (template.has("data")) {
+                                    for (int i = 0; i < template.getJSONArray("data").length(); i++) {
+                                        JSONObject key = template.getJSONArray("data").getJSONObject(i);
+                                        Boolean b = myPrinter.replaceTextName(key.getString("v"), key.getString("k"));
+                                        Log.d("BrotherPrinter", "CAMBIAMOS EL TEMPLATE: " + key.getString("v") + " - " + key.getString("k") + " - " + b);
+                                        String s = ",;";
+                                        if (!sVariables.equals("")) sVariables += s;
+                                        sVariables += key.getString("v");
+                                    }
                                 }
+
+                                Integer iTemplate = template.getInt("id");
+                                String sTemplate = "";
+                                if (iTemplate < 10) sTemplate += "0";
+                                if (iTemplate < 100) sTemplate += "0";
+                                sTemplate = sTemplate + iTemplate.toString();
+
+                                String sNumCopies = "";
+                                if (myPrinter.getUserPrinterInfo().numberOfCopies < 10)
+                                    sNumCopies += "0";
+                                if (myPrinter.getUserPrinterInfo().numberOfCopies < 100)
+                                    sNumCopies += "0";
+                                sNumCopies = sNumCopies + myPrinter.getUserPrinterInfo().numberOfCopies;
+                                String s = (char) 27 + "iXD2" + (char) 2 + (char) 0 + ",;" + "^TS" + sTemplate + sVariables + "^CN" + sNumCopies + "^FF";
+                                Log.d("BrotherPrinter", "FICHERO: " + s);
+                                byte[] bytes = s.getBytes();
+                                FileOutputStream fout = new FileOutputStream(Environment.getExternalStorageDirectory().toString() + "/ALEX/template.txt");
+                                fout.write(bytes, 0, bytes.length);
+                                fout.flush();
+                                fout.close();
+
+                                PrinterStatus status = myPrinter.sendBinaryFile(Environment.getExternalStorageDirectory().toString() + "/ALEX/template.txt");
+                                myPrinter.endCommunication();
+                                callbackctx.success(String.valueOf(status.errorCode));
+                            } else {
+                                callbackctx.error("FAILED to print");
                             }
-
-                            Integer iTemplate = template.getInt("id");
-                            String sTemplate = "";
-                            if( iTemplate < 10 ) sTemplate+= "0";
-                            if( iTemplate < 100 ) sTemplate+= "0";
-                            sTemplate = sTemplate + iTemplate.toString();
-
-                            String sNumCopies = "";
-                            if( myPrinter.getUserPrinterInfo().numberOfCopies < 10 ) sNumCopies+= "0";
-                            if( myPrinter.getUserPrinterInfo().numberOfCopies < 100 ) sNumCopies+= "0";
-                            sNumCopies = sNumCopies + myPrinter.getUserPrinterInfo().numberOfCopies;
-                            String s = (char)27 + "iXD2" + (char)2 + (char)0 + ",;" + "^TS" + sTemplate + sVariables + "^CN" + sNumCopies + "^FF";
-                            Log.d( "BrotherPrinter", "FICHERO: " + s);
-                            byte[] bytes = s.getBytes();
-                            FileOutputStream fout=new FileOutputStream(Environment.getExternalStorageDirectory().toString() + "/ALEX/template.txt");
-                            fout.write(bytes, 0, bytes.length);
-                            fout.flush();
-                            fout.close();
-
-                            PrinterStatus status = myPrinter.sendBinaryFile( Environment.getExternalStorageDirectory().toString() + "/ALEX/template.txt" );
-                            myPrinter.endCommunication();
-                            callbackctx.success(String.valueOf(status.errorCode));
                         }
                         else{
-                            callbackctx.error("FAILED to print: ");
+                            callbackctx.error( PRINTER_BUSY );
                         }
 
                     }catch(Exception e){
-                        callbackctx.error("FAILED to print: " + e.toString() );
+                        callbackctx.error( e.toString() );
                     }
                 }
             });
         }
         catch( Exception e ){
-            callbackctx.error("FAILED to print: " + e.toString() );
+            callbackctx.error( e.toString() );
         }
     }
 
@@ -627,13 +654,13 @@ public class BrotherPrinter extends CordovaPlugin {
                         callbackctx.success( result );
 
                     }catch(Exception e){
-                        callbackctx.error("FAILED to add template: " + e.toString() );
+                        callbackctx.error( e.toString() );
                     }
                 }
             });
         }
         catch( Exception e ){
-            callbackctx.error("FAILED to print: " + e.toString() );
+            callbackctx.error( e.toString() );
         }
     }
 
@@ -739,7 +766,6 @@ public class BrotherPrinter extends CordovaPlugin {
 
     private void getRTCInfo( JSONArray args, final CallbackContext callbackctx) {
         try{
-
             JSONObject printerInfo = args.getJSONObject(0);
 
             cordova.getThreadPool().execute(new Runnable() {
@@ -747,9 +773,16 @@ public class BrotherPrinter extends CordovaPlugin {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
                         myPrinter.startCommunication();
-                        RTCInfo result = myPrinter.getRTCInfo();
-                        myPrinter.endCommunication();
-                        callbackctx.success( result.year + "-" + result.month + "-" + result.day + " " + result.hour + ":" + result.minute + ":" + result.second );
+
+                        PrinterStatus ps = myPrinter.getPrinterStatus();
+                        if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            RTCInfo result = myPrinter.getRTCInfo();
+                            myPrinter.endCommunication();
+                            callbackctx.success( result.year + "-" + result.month + "-" + result.day + " " + result.hour + ":" + result.minute + ":" + result.second );
+                        }
+                        else {
+                            callbackctx.error( PRINTER_BUSY );
+                        }
 
                     }catch(Exception e){
                         callbackctx.error("FAILED to add template: " + e.toString() );
