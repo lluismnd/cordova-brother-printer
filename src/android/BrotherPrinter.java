@@ -387,9 +387,10 @@ public class BrotherPrinter extends CordovaPlugin {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
-                        myPrinter.startCommunication();
                         PrinterStatus ps = myPrinter.getPrinterStatus();
                         if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            myPrinter.startCommunication();
+
                             List<TemplateInfo> templates = new ArrayList();
                             PrinterStatus status = myPrinter.getTemplateList(templates);
 
@@ -506,9 +507,10 @@ public class BrotherPrinter extends CordovaPlugin {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
-                        myPrinter.startCommunication();
                         PrinterStatus ps = myPrinter.getPrinterStatus();
                         if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            myPrinter.startCommunication();
+
                             PrinterStatus status = myPrinter.removeTemplate(list_templates);
                             myPrinter.endCommunication();
                             callbackctx.success(String.valueOf(status.errorCode));
@@ -538,12 +540,15 @@ public class BrotherPrinter extends CordovaPlugin {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
 
-                        /*if( !bluetoothAdapter.isEnabled() ){
+                        /*if( !bluetoothAdapter.isEnabled() ){getPrinterStatus
                             Log.d("TAG", "ERROR - BLUETOOTH NO ACTIVE" );
                         }*/
-                        myPrinter.startCommunication();
-                        PrinterStatus ps = myPrinter.getPrinterStatus();
-                        if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+
+                        //PrinterStatus ps = myPrinter.getPrinterStatus();
+                        //if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            //myPrinter.startCommunication();
+                        Log.d("BrotherPrinter", "NEW VERSION 1.0 " );
+                        if(myPrinter.startCommunication()) {
                             if (myPrinter.startPTTPrint(template.getInt("id"), null)) {
                                 String sVariables = "";
                                 if (template.has("data")) {
@@ -772,10 +777,11 @@ public class BrotherPrinter extends CordovaPlugin {
                 public void run() {
                     try{
                         Printer myPrinter = initPrinter( printerInfo, callbackctx );
-                        myPrinter.startCommunication();
 
                         PrinterStatus ps = myPrinter.getPrinterStatus();
                         if( ps.errorCode.toString().equals( NO_ERROR ) ) {
+                            myPrinter.startCommunication();
+                            
                             RTCInfo result = myPrinter.getRTCInfo();
                             myPrinter.endCommunication();
                             callbackctx.success( result.year + "-" + result.month + "-" + result.day + " " + result.hour + ":" + result.minute + ":" + result.second );
